@@ -1,4 +1,4 @@
-import { getCameraErrorMessage, startCamera, stopCamera } from "./camera.mjs";
+import { getCameraErrorMessage, getCameraSupport, startCamera, stopCamera } from "./camera.mjs";
 import { createHandTracker, getTrackingErrorMessage } from "./hand-tracking.mjs";
 import { drawHands, resizeOverlay } from "./overlay-renderer.mjs";
 import { evaluateHandshape, HANDSHAPE_INSTRUCTIONS } from "./gesture-rules.mjs";
@@ -50,6 +50,13 @@ function setTarget(nextTarget) {
 }
 
 async function handleStartCamera() {
+  const support = getCameraSupport();
+  if (!support.ok) {
+    setCameraMessage("Camera unavailable", `${support.message} ${support.detail}`);
+    updateNoHandState("Move hand into the camera frame");
+    return;
+  }
+
   setCameraMessage("Starting camera", "Allow camera access when your browser asks.");
   els.startButton.disabled = true;
 
@@ -61,7 +68,8 @@ async function handleStartCamera() {
   } catch (error) {
     running = false;
     els.startButton.disabled = false;
-    setCameraMessage("Camera unavailable", getCameraErrorMessage(error));
+    const detail = error?.detail ? ` ${error.detail}` : "";
+    setCameraMessage("Camera unavailable", `${getCameraErrorMessage(error)}${detail}`);
     updateNoHandState("Move hand into the camera frame");
     return;
   }
@@ -206,3 +214,14 @@ els.letterButtons.forEach((button) => {
 els.switchButton.disabled = true;
 setTarget(target);
 updateNoHandState("Move hand into the camera frame");
+showInitialCameraState();
+
+function showInitialCameraState() {
+  const support = getCameraSupport();
+  if (!support.ok) {
+    setCameraMessage("Camera unavailable", `${support.message} ${support.detail}`);
+    return;
+  }
+
+  setCameraMessage("Camera ready", "Tap Start Camera, then allow camera permission.");
+}
