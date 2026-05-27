@@ -6,17 +6,7 @@ const MODEL_URL =
 
 export async function createHandTracker() {
   const vision = await FilesetResolver.forVisionTasks(WASM_URL);
-  const landmarker = await HandLandmarker.createFromOptions(vision, {
-    baseOptions: {
-      modelAssetPath: MODEL_URL,
-      delegate: "GPU"
-    },
-    runningMode: "VIDEO",
-    numHands: 2,
-    minHandDetectionConfidence: 0.45,
-    minHandPresenceConfidence: 0.45,
-    minTrackingConfidence: 0.45
-  });
+  const landmarker = await createLandmarker(vision);
 
   return {
     detect(video, timestampMs = performance.now()) {
@@ -26,6 +16,16 @@ export async function createHandTracker() {
       landmarker.close();
     }
   };
+}
+
+export function getTrackingErrorMessage(error) {
+  if (!navigator.onLine) {
+    return "Hand tracking needs the MediaPipe model to load. Check the connection and refresh.";
+  }
+
+  return error?.message?.includes("Failed to fetch")
+    ? "Hand tracking model could not load on this network. Refresh on a stable HTTPS connection."
+    : "Hand tracking could not start on this browser. The camera may still work without landmarks.";
 }
 
 export function normalizeHandResult(result) {
@@ -39,5 +39,27 @@ export function normalizeHandResult(result) {
       handedness: category?.categoryName || "Unknown",
       confidence: typeof category?.score === "number" ? category.score : 0
     };
+  });
+}
+
+async function createLandmarker(vision) {
+  try {
+    return await createLandmarkerWithDelegate(vision, "GPU");
+  } catch (_error) {
+    return createLandmarkerWithDelegate(vision, "CPU");
+  }
+}
+
+function createLandmarkerWithDelegate(vision, delegate) {
+  return HandLandmarker.createFromOptions(vision, {
+    baseOptions: {
+      modelAssetPath: MODEL_URL,
+      delegate
+    },
+    runningMode: "VIDEO",
+    numHands: 2,
+    minHandDetectionConfidence: 0.45,
+    minHandPresenceConfidence: 0.45,
+    minTrackingConfidence: 0.45
   });
 }

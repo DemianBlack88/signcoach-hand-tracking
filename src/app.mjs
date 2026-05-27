@@ -1,5 +1,5 @@
 import { getCameraErrorMessage, startCamera, stopCamera } from "./camera.mjs";
-import { createHandTracker } from "./hand-tracking.mjs";
+import { createHandTracker, getTrackingErrorMessage } from "./hand-tracking.mjs";
 import { drawHands, resizeOverlay } from "./overlay-renderer.mjs";
 import { evaluateHandshape, HANDSHAPE_INSTRUCTIONS } from "./gesture-rules.mjs";
 import { createFeedbackState } from "./feedback.mjs";
@@ -50,22 +50,31 @@ function setTarget(nextTarget) {
 }
 
 async function handleStartCamera() {
-  setCameraMessage("Loading hand tracker", "The model may take a moment on the first run.");
+  setCameraMessage("Starting camera", "Allow camera access when your browser asks.");
   els.startButton.disabled = true;
 
   try {
-    tracker ??= await createHandTracker();
     await startCamera(els.video, facingMode);
     running = true;
-    setCameraMessage("", "");
     els.startButton.textContent = "Camera On";
     els.switchButton.disabled = false;
-    loop();
   } catch (error) {
     running = false;
     els.startButton.disabled = false;
     setCameraMessage("Camera unavailable", getCameraErrorMessage(error));
     updateNoHandState("Move hand into the camera frame");
+    return;
+  }
+
+  setCameraMessage("Loading hand tracker", "The model may take a moment on the first run.");
+
+  try {
+    tracker ??= await createHandTracker();
+    setCameraMessage("", "");
+    loop();
+  } catch (error) {
+    setCameraMessage("Hand tracking unavailable", getTrackingErrorMessage(error));
+    updateNoHandState("Hand tracking could not start");
   }
 }
 
@@ -86,7 +95,7 @@ function handleReset() {
 }
 
 function loop(now = performance.now()) {
-  if (!running) return;
+  if (!running || !tracker) return;
 
   resizeOverlay(els.canvas, els.video);
 
@@ -94,7 +103,15 @@ function loop(now = performance.now()) {
   fps = Math.round(1000 / delta);
   lastFrameAt = now;
 
-  const hands = tracker.detect(els.video, now);
+  let hands = [];
+  try {
+    hands = tracker.detect(els.video, now);
+  } catch (error) {
+    setCameraMessage("Hand tracking paused", getTrackingErrorMessage(error));
+    updateNoHandState("Hand tracking could not start");
+    running = false;
+    return;
+  }
   drawHands(els.canvas, hands);
 
   if (hands.length === 0) {

@@ -6,6 +6,10 @@ const CAMERA_ERRORS = {
 };
 
 export function getCameraErrorMessage(error) {
+  if (!navigator.mediaDevices?.getUserMedia) {
+    return "Camera access requires HTTPS or localhost. Open the app from a secure URL and try again.";
+  }
+
   return CAMERA_ERRORS[error?.name] || "The camera could not start. Check browser permissions and try again.";
 }
 
@@ -16,14 +20,7 @@ export async function startCamera(video, facingMode = "environment") {
 
   stopCamera(video);
 
-  const stream = await navigator.mediaDevices.getUserMedia({
-    audio: false,
-    video: {
-      facingMode: { ideal: facingMode },
-      width: { ideal: 1280 },
-      height: { ideal: 720 }
-    }
-  });
+  const stream = await getCameraStream(facingMode);
 
   video.srcObject = stream;
   await video.play();
@@ -39,4 +36,28 @@ export function stopCamera(video) {
   }
 
   video.srcObject = null;
+}
+
+async function getCameraStream(facingMode) {
+  const preferred = {
+    audio: false,
+    video: {
+      facingMode: { ideal: facingMode },
+      width: { ideal: 1280 },
+      height: { ideal: 720 }
+    }
+  };
+
+  try {
+    return await navigator.mediaDevices.getUserMedia(preferred);
+  } catch (error) {
+    if (error?.name === "NotAllowedError" || error?.name === "NotFoundError") {
+      throw error;
+    }
+  }
+
+  return navigator.mediaDevices.getUserMedia({
+    audio: false,
+    video: true
+  });
 }
