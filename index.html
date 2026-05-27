@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="SignCoach Hand Tracking is a browser-based portfolio prototype for basic ASL handshape practice."
+    />
+    <title>SignCoach Hand Tracking</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="camera-stage" aria-label="Live camera hand tracking practice">
+        <video id="cameraVideo" autoplay playsinline muted></video>
+        <canvas id="overlayCanvas" aria-hidden="true"></canvas>
+        <div id="cameraMessage" class="camera-message">
+          <strong>Camera ready</strong>
+          <span>Allow camera access to start handshape practice.</span>
+        </div>
+      </section>
+
+      <header class="top-bar">
+        <div>
+          <h1>SignCoach</h1>
+          <p>Basic ASL handshape practice</p>
+        </div>
+        <div id="statusBadge" class="status-badge" data-state="waiting">No hand</div>
+      </header>
+
+      <aside id="debugPanel" class="debug-panel" hidden>
+        <h2>Debug</h2>
+        <dl>
+          <div><dt>Hand detected</dt><dd id="debugDetected">no</dd></div>
+          <div><dt>Handedness</dt><dd id="debugHandedness">-</dd></div>
+          <div><dt>Confidence</dt><dd id="debugConfidence">-</dd></div>
+          <div><dt>Target</dt><dd id="debugTarget">A</dd></div>
+          <div><dt>Raw score</dt><dd id="debugScore">0</dd></div>
+          <div><dt>Feedback</dt><dd id="debugFeedback">Hand not detected</dd></div>
+          <div><dt>FPS</dt><dd id="debugFps">-</dd></div>
+        </dl>
+      </aside>
+
+      <section class="lesson-panel" aria-label="Practice controls">
+        <div class="lesson-summary">
+          <div>
+            <span class="eyebrow">Target</span>
+            <div id="targetLetter" class="target-letter">A</div>
+          </div>
+          <div class="score-ring" aria-label="Match score">
+            <span id="matchScore">0%</span>
+          </div>
+        </div>
+
+        <p id="instructionText" class="instruction-text">
+          Make a relaxed fist with the thumb visible along the side.
+        </p>
+
+        <div class="letter-selector" role="group" aria-label="Choose handshape">
+          <button class="letter-button is-active" type="button" data-target="A">A</button>
+          <button class="letter-button" type="button" data-target="B">B</button>
+          <button class="letter-button" type="button" data-target="L">L</button>
+        </div>
+
+        <div class="feedback-box">
+          <span id="detectionStatus">Waiting for camera</span>
+          <strong id="feedbackMessage">Move hand into the camera frame</strong>
+        </div>
+
+        <div class="control-row">
+          <button id="startButton" class="primary-button" type="button">Start Camera</button>
+          <button id="switchButton" type="button">Switch Camera</button>
+          <button id="resetButton" type="button">Reset</button>
+          <button id="debugButton" type="button" aria-expanded="false">Debug</button>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="/src/app.mjs"></script>
+  </body>
+</html>
