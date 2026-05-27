@@ -47,17 +47,33 @@ SignCoach is a separate project. It does not reuse nail app UI, nail overlay con
 
 5. Open the local URL printed by Vite in a browser.
 
+6. For a production build check:
+
+   ```powershell
+   npm run build
+   ```
+
 ## Mobile testing notes
 
-Camera access usually works on `localhost`. Testing from a phone over the local network may require HTTPS, a secure tunnel, or browser-specific permission settings.
+The Expo nail app can ask for camera permission through Expo Go because it is a native mobile runtime. SignCoach is browser-based, so phone camera access requires a secure browser context.
+
+Camera access usually works on desktop `localhost`. Testing from a phone over the local network usually fails on `http://192.168...` because mobile browsers do not show camera permission prompts from insecure LAN URLs.
 
 Recommended options if phone camera permission is blocked:
+
+- Use the GitHub Pages deployment URL after the Pages workflow runs:
+
+  ```text
+  https://demianblack88.github.io/signcoach-hand-tracking/
+  ```
 
 - Use an HTTPS dev server.
 - Use a trusted tunnel such as ngrok or Cloudflare Tunnel.
 - Test first on desktop `localhost`, then verify on phone once a secure URL is available.
 
 The app prefers the rear camera on mobile when the browser supports it. Use the Switch Camera button if the wrong camera opens.
+
+If the phone still does not ask for permission, read the message shown in the camera panel. It reports whether the page is running in a secure context and whether the browser exposes `getUserMedia`.
 
 ## Development notes
 
