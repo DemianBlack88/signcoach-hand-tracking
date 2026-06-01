@@ -1,6 +1,7 @@
 import { FilesetResolver, HandLandmarker } from "@mediapipe/tasks-vision";
 
-const WASM_URL = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm";
+const MEDIAPIPE_VERSION = "0.10.32";
+const WASM_URL = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MEDIAPIPE_VERSION}/wasm`;
 const MODEL_URL =
   "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task";
 
@@ -23,9 +24,10 @@ export function getTrackingErrorMessage(error) {
     return "Hand tracking needs the MediaPipe model to load. Check the connection and refresh.";
   }
 
-  return error?.message?.includes("Failed to fetch")
+  const detail = getErrorDetail(error);
+  return detail.includes("Failed to fetch")
     ? "Hand tracking model could not load on this network. Refresh on a stable HTTPS connection."
-    : "Hand tracking could not start on this browser. The camera may still work without landmarks.";
+    : `Hand tracking could not start. ${detail}`;
 }
 
 export function normalizeHandResult(result) {
@@ -43,10 +45,18 @@ export function normalizeHandResult(result) {
 }
 
 async function createLandmarker(vision) {
+  if (isMobileBrowser()) {
+    return createLandmarkerWithDelegate(vision);
+  }
+
   try {
     return await createLandmarkerWithDelegate(vision, "GPU");
-  } catch (_error) {
-    return createLandmarkerWithDelegate(vision, "CPU");
+  } catch (gpuError) {
+    try {
+      return await createLandmarkerWithDelegate(vision);
+    } catch (cpuError) {
+      throw new Error(`GPU: ${getErrorDetail(gpuError)} CPU: ${getErrorDetail(cpuError)}`);
+    }
   }
 }
 
@@ -54,7 +64,7 @@ function createLandmarkerWithDelegate(vision, delegate) {
   return HandLandmarker.createFromOptions(vision, {
     baseOptions: {
       modelAssetPath: MODEL_URL,
-      delegate
+      ...(delegate ? { delegate } : {})
     },
     runningMode: "VIDEO",
     numHands: 2,
@@ -62,4 +72,12 @@ function createLandmarkerWithDelegate(vision, delegate) {
     minHandPresenceConfidence: 0.45,
     minTrackingConfidence: 0.45
   });
+}
+
+function getErrorDetail(error) {
+  return error?.message || error?.name || "Unknown MediaPipe initialization error.";
+}
+
+function isMobileBrowser() {
+  return navigator.maxTouchPoints > 1 || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 }

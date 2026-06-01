@@ -33,6 +33,7 @@ let target = "A";
 let facingMode = "environment";
 let tracker = null;
 let running = false;
+let cameraSwitching = false;
 let animationId = null;
 let lastFrameAt = performance.now();
 let fps = 0;
@@ -87,13 +88,24 @@ async function handleStartCamera() {
 }
 
 async function handleSwitchCamera() {
-  facingMode = facingMode === "environment" ? "user" : "environment";
-  if (!running) return;
+  if (!running || cameraSwitching) return;
+
+  const previousFacingMode = facingMode;
+  const nextFacingMode = facingMode === "environment" ? "user" : "environment";
+  cameraSwitching = true;
+  els.switchButton.disabled = true;
+  setCameraMessage("Switching camera", "Starting the other camera.");
 
   try {
-    await startCamera(els.video, facingMode);
+    await startCamera(els.video, nextFacingMode);
+    facingMode = nextFacingMode;
+    setCameraMessage("", "");
   } catch (error) {
+    facingMode = previousFacingMode;
     setCameraMessage("Camera switch failed", getCameraErrorMessage(error));
+  } finally {
+    cameraSwitching = false;
+    els.switchButton.disabled = false;
   }
 }
 
@@ -106,6 +118,11 @@ function loop(now = performance.now()) {
   if (!running || !tracker) return;
 
   resizeOverlay(els.canvas, els.video);
+
+  if (cameraSwitching || els.video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
+    animationId = requestAnimationFrame(loop);
+    return;
+  }
 
   const delta = Math.max(1, now - lastFrameAt);
   fps = Math.round(1000 / delta);
