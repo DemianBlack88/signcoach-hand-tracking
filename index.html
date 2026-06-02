@@ -42,37 +42,49 @@
         </dl>
       </aside>
 
-      <section class="lesson-panel" aria-label="Practice controls">
-        <div class="lesson-summary">
-          <div>
-            <span class="eyebrow">Target</span>
-            <div id="targetLetter" class="target-letter">A</div>
+      <section id="lessonPanel" class="lesson-panel" aria-label="Practice controls">
+        <button
+          id="panelToggle"
+          class="panel-toggle"
+          type="button"
+          aria-controls="lessonPanelBody"
+          aria-expanded="true"
+          aria-label="Collapse practice controls"
+          title="Collapse practice controls"
+        ></button>
+
+        <div id="lessonPanelBody" class="lesson-panel-body">
+          <div class="lesson-summary">
+            <div>
+              <span class="eyebrow">Target</span>
+              <div id="targetLetter" class="target-letter">A</div>
+            </div>
+            <div class="score-ring" aria-label="Match score">
+              <span id="matchScore">0%</span>
+            </div>
           </div>
-          <div class="score-ring" aria-label="Match score">
-            <span id="matchScore">0%</span>
+
+          <p id="instructionText" class="instruction-text">
+            Make a relaxed fist with the thumb visible along the side.
+          </p>
+
+          <div class="letter-selector" role="group" aria-label="Choose handshape">
+            <button class="letter-button is-active" type="button" data-target="A">A</button>
+            <button class="letter-button" type="button" data-target="B">B</button>
+            <button class="letter-button" type="button" data-target="L">L</button>
           </div>
-        </div>
 
-        <p id="instructionText" class="instruction-text">
-          Make a relaxed fist with the thumb visible along the side.
-        </p>
+          <div class="feedback-box">
+            <span id="detectionStatus">Waiting for camera</span>
+            <strong id="feedbackMessage">Move hand into the camera frame</strong>
+          </div>
 
-        <div class="letter-selector" role="group" aria-label="Choose handshape">
-          <button class="letter-button is-active" type="button" data-target="A">A</button>
-          <button class="letter-button" type="button" data-target="B">B</button>
-          <button class="letter-button" type="button" data-target="L">L</button>
-        </div>
-
-        <div class="feedback-box">
-          <span id="detectionStatus">Waiting for camera</span>
-          <strong id="feedbackMessage">Move hand into the camera frame</strong>
-        </div>
-
-        <div class="control-row">
-          <button id="startButton" class="primary-button" type="button">Start Camera</button>
-          <button id="switchButton" type="button">Switch Camera</button>
-          <button id="resetButton" type="button">Reset</button>
-          <button id="debugButton" type="button" aria-expanded="false">Debug</button>
+          <div class="control-row">
+            <button id="startButton" class="primary-button" type="button">Start Camera</button>
+            <button id="switchButton" type="button">Switch Camera</button>
+            <button id="resetButton" type="button">Reset</button>
+            <button id="debugButton" type="button" aria-expanded="false">Debug</button>
+          </div>
         </div>
       </section>
     </main>

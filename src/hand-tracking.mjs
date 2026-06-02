@@ -8,10 +8,18 @@ const MODEL_URL =
 export async function createHandTracker() {
   const vision = await FilesetResolver.forVisionTasks(WASM_URL);
   const landmarker = await createLandmarker(vision);
+  let lastTimestampMs = 0;
+  let lastVideoTime = -1;
 
   return {
     detect(video, timestampMs = performance.now()) {
-      return normalizeHandResult(landmarker.detectForVideo(video, timestampMs));
+      if (video.currentTime === lastVideoTime) {
+        return null;
+      }
+
+      lastVideoTime = video.currentTime;
+      lastTimestampMs = Math.max(timestampMs, lastTimestampMs + 1);
+      return normalizeHandResult(landmarker.detectForVideo(video, lastTimestampMs));
     },
     close() {
       landmarker.close();

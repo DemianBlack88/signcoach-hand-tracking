@@ -169,6 +169,49 @@ button:focus-visible {
   backdrop-filter: blur(18px);
 }
 
+.panel-toggle {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  display: grid;
+  width: 58px;
+  min-height: 30px;
+  transform: translateX(-50%);
+  place-items: center;
+  border-color: var(--line);
+  border-radius: 8px;
+  background: var(--panel-strong);
+}
+
+.panel-toggle::before {
+  width: 12px;
+  height: 12px;
+  border-top: 3px solid var(--muted);
+  border-left: 3px solid var(--muted);
+  content: "";
+  transform: translateY(3px) rotate(45deg);
+  transition: transform 160ms ease;
+}
+
+.lesson-panel-body {
+  display: grid;
+  gap: 12px;
+}
+
+.lesson-panel.is-collapsed {
+  height: 18px;
+  min-height: 18px;
+  padding: 0;
+}
+
+.lesson-panel.is-collapsed .panel-toggle::before {
+  transform: translateY(-3px) rotate(225deg);
+}
+
+.lesson-panel.is-collapsed .lesson-panel-body {
+  display: none;
+}
+
 .lesson-summary {
   display: flex;
   align-items: center;
@@ -312,6 +355,10 @@ button:focus-visible {
     left: 10px;
     gap: 10px;
     padding: 12px;
+  }
+
+  .lesson-panel-body {
+    gap: 10px;
   }
 
   .control-row {

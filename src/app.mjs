@@ -14,6 +14,8 @@ const els = {
   matchScore: document.querySelector("#matchScore"),
   detectionStatus: document.querySelector("#detectionStatus"),
   feedbackMessage: document.querySelector("#feedbackMessage"),
+  lessonPanel: document.querySelector("#lessonPanel"),
+  panelToggle: document.querySelector("#panelToggle"),
   startButton: document.querySelector("#startButton"),
   switchButton: document.querySelector("#switchButton"),
   resetButton: document.querySelector("#resetButton"),
@@ -137,6 +139,12 @@ function loop(now = performance.now()) {
     running = false;
     return;
   }
+
+  if (!hands) {
+    animationId = requestAnimationFrame(loop);
+    return;
+  }
+
   drawHands(els.canvas, hands);
 
   if (hands.length === 0) {
@@ -219,6 +227,12 @@ window.addEventListener("beforeunload", () => {
 els.startButton.addEventListener("click", handleStartCamera);
 els.switchButton.addEventListener("click", handleSwitchCamera);
 els.resetButton.addEventListener("click", handleReset);
+els.panelToggle.addEventListener("click", () => {
+  const collapsed = els.lessonPanel.classList.toggle("is-collapsed");
+  els.panelToggle.setAttribute("aria-expanded", String(!collapsed));
+  els.panelToggle.setAttribute("aria-label", collapsed ? "Expand practice controls" : "Collapse practice controls");
+  els.panelToggle.setAttribute("title", collapsed ? "Expand practice controls" : "Collapse practice controls");
+});
 els.debugButton.addEventListener("click", () => {
   const isHidden = els.debugPanel.hidden;
   els.debugPanel.hidden = !isHidden;
