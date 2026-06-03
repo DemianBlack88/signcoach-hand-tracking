@@ -253,6 +253,74 @@ button:focus-visible {
   line-height: 1.45;
 }
 
+.reference-card {
+  display: grid;
+  grid-template-columns: 118px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius);
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.reference-image {
+  display: grid;
+  min-height: 118px;
+  place-items: center;
+  border-radius: var(--radius);
+  background: rgba(6, 12, 18, 0.62);
+}
+
+.reference-image svg {
+  width: 112px;
+  height: 112px;
+}
+
+.reference-image .ref-palm,
+.reference-image .ref-finger,
+.reference-image .ref-thumb {
+  fill: rgba(246, 247, 251, 0.92);
+  stroke: rgba(13, 18, 27, 0.78);
+  stroke-width: 3;
+}
+
+.reference-image .ref-thumb {
+  fill: rgba(89, 214, 167, 0.92);
+}
+
+.reference-image .folded {
+  fill: rgba(214, 222, 234, 0.92);
+}
+
+.reference-image .ref-line {
+  fill: none;
+  stroke: rgba(13, 18, 27, 0.5);
+  stroke-linecap: round;
+  stroke-width: 3;
+}
+
+.reference-copy {
+  min-width: 0;
+}
+
+.reference-copy strong {
+  display: block;
+  margin: 2px 0 7px;
+  font-size: 1rem;
+  line-height: 1.2;
+}
+
+.reference-copy ul {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding-left: 17px;
+  color: #dbe4f1;
+  font-size: 0.82rem;
+  line-height: 1.25;
+}
+
 .letter-selector {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -359,6 +427,20 @@ button:focus-visible {
 
   .lesson-panel-body {
     gap: 10px;
+  }
+
+  .reference-card {
+    grid-template-columns: 92px minmax(0, 1fr);
+    padding: 8px;
+  }
+
+  .reference-image {
+    min-height: 92px;
+  }
+
+  .reference-image svg {
+    width: 88px;
+    height: 88px;
   }
 
   .control-row {

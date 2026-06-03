@@ -3,6 +3,7 @@ import { createHandTracker, getTrackingErrorMessage } from "./hand-tracking.mjs"
 import { drawHands, resizeOverlay } from "./overlay-renderer.mjs";
 import { evaluateHandshape, HANDSHAPE_INSTRUCTIONS } from "./gesture-rules.mjs";
 import { createFeedbackState } from "./feedback.mjs";
+import { HANDSHAPE_REFERENCES } from "./reference-handshapes.mjs";
 
 const els = {
   video: document.querySelector("#cameraVideo"),
@@ -11,6 +12,9 @@ const els = {
   statusBadge: document.querySelector("#statusBadge"),
   targetLetter: document.querySelector("#targetLetter"),
   instructionText: document.querySelector("#instructionText"),
+  referenceImage: document.querySelector("#referenceImage"),
+  referenceTitle: document.querySelector("#referenceTitle"),
+  referenceCues: document.querySelector("#referenceCues"),
   matchScore: document.querySelector("#matchScore"),
   detectionStatus: document.querySelector("#detectionStatus"),
   feedbackMessage: document.querySelector("#feedbackMessage"),
@@ -46,10 +50,20 @@ function setTarget(nextTarget) {
   target = nextTarget;
   els.targetLetter.textContent = target;
   els.instructionText.textContent = HANDSHAPE_INSTRUCTIONS[target];
+  updateReference(target);
   els.letterButtons.forEach((button) => {
     button.classList.toggle("is-active", button.dataset.target === target);
   });
   feedbackState.reset();
+}
+
+function updateReference(nextTarget) {
+  const reference = HANDSHAPE_REFERENCES[nextTarget];
+  if (!reference) return;
+
+  els.referenceImage.innerHTML = reference.svg;
+  els.referenceTitle.textContent = reference.title;
+  els.referenceCues.innerHTML = reference.cues.map((cue) => `<li>${cue}</li>`).join("");
 }
 
 async function handleStartCamera() {
