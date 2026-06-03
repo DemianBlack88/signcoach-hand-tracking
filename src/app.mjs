@@ -61,7 +61,10 @@ function updateReference(nextTarget) {
   const reference = HANDSHAPE_REFERENCES[nextTarget];
   if (!reference) return;
 
-  els.referenceImage.innerHTML = reference.svg;
+  els.referenceImage.innerHTML = "";
+  els.referenceImage.style.setProperty("--ref-image", `url("${reference.imageUrl}")`);
+  els.referenceImage.style.setProperty("--ref-position", reference.cropPosition);
+  els.referenceImage.style.setProperty("--ref-size", reference.cropSize);
   els.referenceTitle.textContent = reference.title;
   els.referenceCues.innerHTML = reference.cues.map((cue) => `<li>${cue}</li>`).join("");
 }

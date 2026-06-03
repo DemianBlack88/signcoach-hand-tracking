@@ -255,7 +255,7 @@ button:focus-visible {
 
 .reference-card {
   display: grid;
-  grid-template-columns: 118px minmax(0, 1fr);
+  grid-template-columns: 150px minmax(0, 1fr);
   gap: 12px;
   align-items: center;
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -266,38 +266,15 @@ button:focus-visible {
 
 .reference-image {
   display: grid;
-  min-height: 118px;
+  min-height: 122px;
   place-items: center;
   border-radius: var(--radius);
-  background: rgba(6, 12, 18, 0.62);
-}
-
-.reference-image svg {
-  width: 112px;
-  height: 112px;
-}
-
-.reference-image .ref-palm,
-.reference-image .ref-finger,
-.reference-image .ref-thumb {
-  fill: rgba(246, 247, 251, 0.92);
-  stroke: rgba(13, 18, 27, 0.78);
-  stroke-width: 3;
-}
-
-.reference-image .ref-thumb {
-  fill: rgba(89, 214, 167, 0.92);
-}
-
-.reference-image .folded {
-  fill: rgba(214, 222, 234, 0.92);
-}
-
-.reference-image .ref-line {
-  fill: none;
-  stroke: rgba(13, 18, 27, 0.5);
-  stroke-linecap: round;
-  stroke-width: 3;
+  overflow: hidden;
+  background-color: #ffffff;
+  background-image: var(--ref-image);
+  background-position: var(--ref-position);
+  background-repeat: no-repeat;
+  background-size: var(--ref-size);
 }
 
 .reference-copy {
@@ -430,17 +407,12 @@ button:focus-visible {
   }
 
   .reference-card {
-    grid-template-columns: 92px minmax(0, 1fr);
+    grid-template-columns: 1fr;
     padding: 8px;
   }
 
   .reference-image {
-    min-height: 92px;
-  }
-
-  .reference-image svg {
-    width: 88px;
-    height: 88px;
+    min-height: 132px;
   }
 
   .control-row {
