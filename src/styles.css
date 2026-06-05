@@ -198,9 +198,48 @@ button:focus-visible {
   gap: 12px;
 }
 
+.collapsed-summary {
+  display: none;
+  align-items: center;
+  width: 100%;
+  min-height: 40px;
+  gap: 8px;
+  padding: 0 12px;
+}
+
+.collapsed-summary span:first-child {
+  display: grid;
+  width: 34px;
+  height: 30px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 8px;
+  background: rgba(89, 214, 167, 0.18);
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.collapsed-summary strong {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  color: #f6f7fb;
+  font-size: 0.82rem;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.collapsed-summary span:last-child {
+  flex: 0 0 auto;
+  color: var(--accent);
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
 .lesson-panel.is-collapsed {
-  height: 18px;
-  min-height: 18px;
+  min-height: 44px;
   padding: 0;
 }
 
@@ -210,6 +249,10 @@ button:focus-visible {
 
 .lesson-panel.is-collapsed .lesson-panel-body {
   display: none;
+}
+
+.lesson-panel.is-collapsed .collapsed-summary {
+  display: flex;
 }
 
 .lesson-summary {
@@ -272,9 +315,9 @@ button:focus-visible {
   overflow: hidden;
   background-color: #ffffff;
   background-image: var(--ref-image);
-  background-position: var(--ref-position);
+  background-position: center;
   background-repeat: no-repeat;
-  background-size: var(--ref-size);
+  background-size: contain;
 }
 
 .reference-copy {

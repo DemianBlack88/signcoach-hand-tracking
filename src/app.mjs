@@ -15,6 +15,9 @@ const els = {
   referenceImage: document.querySelector("#referenceImage"),
   referenceTitle: document.querySelector("#referenceTitle"),
   referenceCues: document.querySelector("#referenceCues"),
+  collapsedTarget: document.querySelector("#collapsedTarget"),
+  collapsedFeedback: document.querySelector("#collapsedFeedback"),
+  collapsedScore: document.querySelector("#collapsedScore"),
   matchScore: document.querySelector("#matchScore"),
   detectionStatus: document.querySelector("#detectionStatus"),
   feedbackMessage: document.querySelector("#feedbackMessage"),
@@ -49,6 +52,7 @@ const feedbackState = createFeedbackState();
 function setTarget(nextTarget) {
   target = nextTarget;
   els.targetLetter.textContent = target;
+  els.collapsedTarget.textContent = target;
   els.instructionText.textContent = HANDSHAPE_INSTRUCTIONS[target];
   updateReference(target);
   els.letterButtons.forEach((button) => {
@@ -63,8 +67,6 @@ function updateReference(nextTarget) {
 
   els.referenceImage.innerHTML = "";
   els.referenceImage.style.setProperty("--ref-image", `url("${reference.imageUrl}")`);
-  els.referenceImage.style.setProperty("--ref-position", reference.cropPosition);
-  els.referenceImage.style.setProperty("--ref-size", reference.cropSize);
   els.referenceTitle.textContent = reference.title;
   els.referenceCues.innerHTML = reference.cues.map((cue) => `<li>${cue}</li>`).join("");
 }
@@ -184,6 +186,7 @@ function updateDetectedState(hands, now) {
   els.detectionStatus.textContent = `${primaryHand.handedness} hand detected`;
   els.feedbackMessage.textContent = stable.feedback;
   els.matchScore.textContent = `${scorePercent}%`;
+  updateCollapsedSummary(stable.feedback, scorePercent);
   els.cameraMessage.hidden = true;
 
   updateDebug({
@@ -202,6 +205,7 @@ function updateNoHandState(feedback) {
   els.detectionStatus.textContent = "No hand detected";
   els.feedbackMessage.textContent = stable.feedback;
   els.matchScore.textContent = "0%";
+  updateCollapsedSummary(stable.feedback, 0);
 
   updateDebug({
     detected: false,
@@ -220,6 +224,11 @@ function updateDebug({ detected, handedness, confidence, score, feedback }) {
   els.debugScore.textContent = Number.isFinite(score) ? score.toFixed(2) : "0";
   els.debugFeedback.textContent = feedback;
   els.debugFps.textContent = fps ? String(fps) : "-";
+}
+
+function updateCollapsedSummary(feedback, scorePercent) {
+  els.collapsedFeedback.textContent = feedback;
+  els.collapsedScore.textContent = `${scorePercent}%`;
 }
 
 function setCameraMessage(title, detail) {
