@@ -108,6 +108,7 @@ function evaluateA(features) {
   score += !features.thumbOpen ? 0.18 : 0.05;
   score += !features.thumbRaised ? 0.08 : 0;
   score += features.handSize >= 0.11 && features.handSize <= 0.42 ? 0.2 : 0.05;
+  if (features.thumbRaised) score = Math.min(score, 0.72);
 
   return {
     score: clamp(score),
