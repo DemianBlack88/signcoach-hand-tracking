@@ -54,8 +54,12 @@
         ></button>
 
         <div class="collapsed-summary" aria-live="polite">
+          <div id="collapsedReference" class="collapsed-reference" aria-hidden="true"></div>
           <span id="collapsedTarget">A</span>
-          <strong id="collapsedFeedback">Move hand into the camera frame</strong>
+          <div class="collapsed-copy">
+            <strong id="collapsedFeedback">Move hand into the camera frame</strong>
+            <small id="collapsedHold">Hold: 0%</small>
+          </div>
           <span id="collapsedScore">0%</span>
         </div>
 
@@ -92,6 +96,20 @@
           <div class="feedback-box">
             <span id="detectionStatus">Waiting for camera</span>
             <strong id="feedbackMessage">Move hand into the camera frame</strong>
+            <div class="coach-metrics" aria-label="Practice progress">
+              <div>
+                <span>Shape</span>
+                <strong id="shapeScore">0%</strong>
+              </div>
+              <div>
+                <span>Hold</span>
+                <strong id="holdProgress">0%</strong>
+              </div>
+              <div>
+                <span>Status</span>
+                <strong id="finalStatus">Waiting</strong>
+              </div>
+            </div>
           </div>
 
           <div class="control-row">

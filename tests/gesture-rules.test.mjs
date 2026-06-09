@@ -31,6 +31,26 @@ test("A rule scores a fist-like mock higher than an open hand mock", () => {
   assert.ok(evaluateHandshape("A", fist).score > evaluateHandshape("A", openHand).score);
 });
 
+test("A rule scores a side thumb higher than a raised thumb", () => {
+  const sideThumb = makeHand({
+    index: "folded",
+    middle: "folded",
+    ring: "folded",
+    pinky: "folded",
+    thumb: "closed"
+  });
+  const raisedThumb = makeHand({
+    index: "folded",
+    middle: "folded",
+    ring: "folded",
+    pinky: "folded",
+    thumb: "raised"
+  });
+
+  assert.ok(evaluateHandshape("A", sideThumb).score > evaluateHandshape("A", raisedThumb).score);
+  assert.equal(evaluateHandshape("A", raisedThumb).feedback, "Keep the thumb on the side, not up");
+});
+
 test("L rule scores thumb and index extended higher than a fist mock", () => {
   const lShape = makeHand({
     index: "extended",
@@ -93,5 +113,10 @@ function setThumb(landmarks, state) {
   landmarks[1] = { x: 0.4, y: 0.68, z: 0 };
   landmarks[2] = { x: 0.36, y: 0.62, z: 0 };
   landmarks[3] = { x: 0.34, y: 0.58, z: 0 };
+  if (state === "raised") {
+    landmarks[4] = { x: 0.38, y: 0.42, z: 0 };
+    return;
+  }
+
   landmarks[4] = state === "open" ? { x: 0.24, y: 0.6, z: 0 } : { x: 0.39, y: 0.58, z: 0 };
 }

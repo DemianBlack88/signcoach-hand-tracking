@@ -1,21 +1,14 @@
-import referenceAUrl from "./assets/reference-a.jpg";
-import referenceBUrl from "./assets/reference-b.jpg";
-import referenceLUrl from "./assets/reference-l.jpg";
-
 export const HANDSHAPE_REFERENCES = {
   A: {
-    title: "A from ASL alphabet chart",
-    cues: ["Match the fist shape shown in the reference", "Thumb stays visible along the side"],
-    imageUrl: referenceAUrl
+    title: "A: closed fist, thumb on side",
+    cues: ["Fold all four fingers into a fist", "Keep the thumb along the side, not pointing up", "Show the fist angle like the animation"]
   },
   B: {
-    title: "B from ASL alphabet chart",
-    cues: ["Hold the hand flat like the reference", "Keep four fingers straight together"],
-    imageUrl: referenceBUrl
+    title: "B: flat hand, fingers together",
+    cues: ["Face the palm toward the camera", "Keep four fingers straight and together", "Fold the thumb across the palm"]
   },
   L: {
-    title: "L from ASL alphabet chart",
-    cues: ["Index finger points up", "Thumb opens to the side"],
-    imageUrl: referenceLUrl
+    title: "L: index up, thumb out",
+    cues: ["Point the index finger up", "Open the thumb out to the side", "Fold the other three fingers down"]
   }
 };

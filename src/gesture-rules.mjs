@@ -1,7 +1,7 @@
 export const HANDSHAPE_INSTRUCTIONS = {
-  A: "Make a relaxed fist with the thumb visible along the side.",
-  B: "Extend four fingers together and keep the thumb folded across the palm.",
-  L: "Extend your index finger and thumb, then fold the other fingers."
+  A: "Make a fist. Keep the thumb along the side, not pointing up.",
+  B: "Face your palm to the camera. Keep four fingers straight together and fold the thumb across.",
+  L: "Point your index finger up, open the thumb to the side, and fold the other fingers."
 };
 
 const FINGER_TIPS = {
@@ -81,6 +81,7 @@ export function getHandFeatures(landmarks) {
   const extendedCount = Object.values(extended).filter(Boolean).length;
   const foldedCount = Object.values(folded).filter(Boolean).length;
   const thumbOpen = isThumbOpen(landmarks);
+  const thumbRaised = isThumbRaised(landmarks);
   const palmSpan = distance(landmarks[5], landmarks[17]);
   const palmHeight = distance(landmarks[0], landmarks[9]);
   const handSize = Math.max(palmSpan, palmHeight);
@@ -93,6 +94,7 @@ export function getHandFeatures(landmarks) {
     extendedCount,
     foldedCount,
     thumbOpen,
+    thumbRaised,
     handSize,
     fingerSpread,
     indexThumbAngle,
@@ -102,14 +104,16 @@ export function getHandFeatures(landmarks) {
 
 function evaluateA(features) {
   let score = 0;
-  score += features.foldedCount / 4 * 0.62;
-  score += !features.thumbOpen ? 0.18 : 0.08;
+  score += features.foldedCount / 4 * 0.56;
+  score += !features.thumbOpen ? 0.18 : 0.05;
+  score += !features.thumbRaised ? 0.08 : 0;
   score += features.handSize >= 0.11 && features.handSize <= 0.42 ? 0.2 : 0.05;
 
   return {
     score: clamp(score),
     feedback: pickFeedback(score, [
       [features.foldedCount < 3, "Try folding the other fingers"],
+      [features.thumbRaised, "Keep the thumb on the side, not up"],
       [features.thumbOpen, "Thumb position looks off"],
       [features.handSize < 0.08, "Too far from camera"],
       [features.handSize > 0.48, "Too close to camera"]
@@ -180,6 +184,18 @@ function isThumbOpen(landmarks) {
 
   const palmWidth = distance(indexMcp, pinkyMcp);
   return distance(thumbTip, indexMcp) > palmWidth * 0.62 && distance(thumbTip, thumbIp) > palmWidth * 0.18;
+}
+
+function isThumbRaised(landmarks) {
+  const thumbTip = landmarks[4];
+  const thumbIp = landmarks[3];
+  const indexMcp = landmarks[5];
+  const wrist = landmarks[0];
+  if (!thumbTip || !thumbIp || !indexMcp || !wrist) return false;
+
+  const thumbAboveIndex = thumbTip.y < indexMcp.y - 0.035;
+  const thumbExtendedFromWrist = distance(thumbTip, wrist) > distance(thumbIp, wrist) * 1.08;
+  return thumbAboveIndex && thumbExtendedFromWrist;
 }
 
 function averageTipSpread(landmarks) {

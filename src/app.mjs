@@ -4,6 +4,7 @@ import { drawHands, resizeOverlay } from "./overlay-renderer.mjs";
 import { evaluateHandshape, HANDSHAPE_INSTRUCTIONS } from "./gesture-rules.mjs";
 import { createFeedbackState } from "./feedback.mjs";
 import { HANDSHAPE_REFERENCES } from "./reference-handshapes.mjs";
+import { renderHandshapeDemo } from "./animated-handshapes.mjs";
 
 const els = {
   video: document.querySelector("#cameraVideo"),
@@ -15,10 +16,15 @@ const els = {
   referenceImage: document.querySelector("#referenceImage"),
   referenceTitle: document.querySelector("#referenceTitle"),
   referenceCues: document.querySelector("#referenceCues"),
+  collapsedReference: document.querySelector("#collapsedReference"),
   collapsedTarget: document.querySelector("#collapsedTarget"),
   collapsedFeedback: document.querySelector("#collapsedFeedback"),
+  collapsedHold: document.querySelector("#collapsedHold"),
   collapsedScore: document.querySelector("#collapsedScore"),
   matchScore: document.querySelector("#matchScore"),
+  shapeScore: document.querySelector("#shapeScore"),
+  holdProgress: document.querySelector("#holdProgress"),
+  finalStatus: document.querySelector("#finalStatus"),
   detectionStatus: document.querySelector("#detectionStatus"),
   feedbackMessage: document.querySelector("#feedbackMessage"),
   lessonPanel: document.querySelector("#lessonPanel"),
@@ -65,8 +71,8 @@ function updateReference(nextTarget) {
   const reference = HANDSHAPE_REFERENCES[nextTarget];
   if (!reference) return;
 
-  els.referenceImage.innerHTML = "";
-  els.referenceImage.style.setProperty("--ref-image", `url("${reference.imageUrl}")`);
+  els.referenceImage.innerHTML = renderHandshapeDemo(nextTarget);
+  els.collapsedReference.innerHTML = renderHandshapeDemo(nextTarget, { compact: true });
   els.referenceTitle.textContent = reference.title;
   els.referenceCues.innerHTML = reference.cues.map((cue) => `<li>${cue}</li>`).join("");
 }
@@ -180,13 +186,15 @@ function updateDetectedState(hands, now) {
   const evaluation = evaluateHandshape(target, primaryHand.landmarks);
   const stable = feedbackState.update(evaluation, now);
   const scorePercent = Math.round(stable.smoothedScore * 100);
+  const holdPercent = Math.round(stable.holdProgress * 100);
 
   els.statusBadge.textContent = "Hand detected";
   els.statusBadge.dataset.state = "detected";
   els.detectionStatus.textContent = `${primaryHand.handedness} hand detected`;
   els.feedbackMessage.textContent = stable.feedback;
   els.matchScore.textContent = `${scorePercent}%`;
-  updateCollapsedSummary(stable.feedback, scorePercent);
+  updateCoachMetrics(scorePercent, holdPercent, getPracticeStatus(stable));
+  updateCollapsedSummary(stable.feedback, scorePercent, holdPercent);
   els.cameraMessage.hidden = true;
 
   updateDebug({
@@ -205,7 +213,8 @@ function updateNoHandState(feedback) {
   els.detectionStatus.textContent = "No hand detected";
   els.feedbackMessage.textContent = stable.feedback;
   els.matchScore.textContent = "0%";
-  updateCollapsedSummary(stable.feedback, 0);
+  updateCoachMetrics(0, 0, "Waiting");
+  updateCollapsedSummary(stable.feedback, 0, 0);
 
   updateDebug({
     detected: false,
@@ -226,9 +235,23 @@ function updateDebug({ detected, handedness, confidence, score, feedback }) {
   els.debugFps.textContent = fps ? String(fps) : "-";
 }
 
-function updateCollapsedSummary(feedback, scorePercent) {
+function updateCoachMetrics(scorePercent, holdPercent, status) {
+  els.shapeScore.textContent = `${scorePercent}%`;
+  els.holdProgress.textContent = `${holdPercent}%`;
+  els.finalStatus.textContent = status;
+}
+
+function updateCollapsedSummary(feedback, scorePercent, holdPercent) {
   els.collapsedFeedback.textContent = feedback;
   els.collapsedScore.textContent = `${scorePercent}%`;
+  els.collapsedHold.textContent = `Hold: ${holdPercent}%`;
+}
+
+function getPracticeStatus(stable) {
+  if (stable.strongMatch) return "Possible match";
+  if (stable.smoothedScore >= 0.78) return "Hold";
+  if (stable.smoothedScore >= 0.45) return "Adjust";
+  return "Practice";
 }
 
 function setCameraMessage(title, detail) {

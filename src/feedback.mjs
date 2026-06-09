@@ -44,6 +44,6 @@ export function createFeedbackState(windowSize = DEFAULT_WINDOW_SIZE) {
 function buildStableFeedback(feedback, score, heldMs) {
   if (!feedback || feedback === "Hand not detected") return "Hand not detected";
   if (score >= 0.78 && heldMs >= HOLD_MS) return "Possible match";
-  if (score >= 0.78) return "Hold your hand steady";
+  if (score >= 0.78) return "Shape looks close. Hold steady";
   return feedback;
 }
