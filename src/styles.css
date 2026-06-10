@@ -335,111 +335,35 @@ button:focus-visible {
     linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(229, 238, 243, 0.96));
 }
 
-.gesture-demo {
-  width: 100%;
-  margin: 0;
-}
-
-.gesture-demo-stage {
-  position: relative;
+.handshape-reference {
   display: grid;
   width: 100%;
+  height: 100%;
   min-height: 122px;
+  margin: 0;
   place-items: center;
-  overflow: hidden;
-  border-radius: var(--radius);
 }
 
-.gesture-demo svg {
-  width: min(100%, 190px);
+.handshape-reference img {
+  display: block;
+  width: 100%;
+  max-width: 190px;
   height: auto;
-  overflow: visible;
+  max-height: 132px;
+  object-fit: contain;
 }
 
-.gesture-demo .palm,
-.gesture-demo .fold,
-.gesture-demo .straight,
-.gesture-demo .index-up,
-.gesture-demo .thumb {
-  fill: rgba(249, 236, 213, 0.96);
-  stroke: #152034;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 6;
-}
-
-.gesture-demo .cue-line {
-  fill: none;
-  stroke: rgba(47, 191, 137, 0.9);
-  stroke-dasharray: 7 7;
-  stroke-linecap: round;
-  stroke-width: 4;
-  animation: cue-dash 1.35s linear infinite;
-}
-
-.gesture-demo text {
-  fill: #152034;
-  font-size: 24px;
-  font-weight: 900;
-}
-
-.gesture-demo-badge {
-  position: absolute;
-  right: 8px;
-  bottom: 8px;
-  border-radius: 999px;
-  padding: 5px 8px;
-  background: rgba(21, 32, 52, 0.88);
-  color: #ffffff;
-  font-size: 0.64rem;
-  font-weight: 900;
-}
-
-.gesture-demo-a .thumb-side {
-  transform-box: fill-box;
-  transform-origin: 80% 50%;
-  animation: thumb-side 2.6s ease-in-out infinite;
-}
-
-.gesture-demo-b .straight {
-  transform-box: fill-box;
-  transform-origin: 50% 100%;
-  animation: fingers-together 2.8s ease-in-out infinite;
-}
-
-.gesture-demo-l .index-up {
-  transform-box: fill-box;
-  transform-origin: 50% 100%;
-  animation: index-up 2.6s ease-in-out infinite;
-}
-
-.gesture-demo-l .thumb-open {
-  transform-box: fill-box;
-  transform-origin: 80% 50%;
-  animation: thumb-open 2.6s ease-in-out infinite;
-}
-
-.gesture-demo.is-compact .gesture-demo-stage {
+.handshape-reference.is-compact {
   min-height: 42px;
+  overflow: hidden;
+  border-radius: 7px;
   background: rgba(255, 255, 255, 0.92);
 }
 
-.gesture-demo.is-compact svg {
-  width: 54px;
-}
-
-.gesture-demo.is-compact text,
-.gesture-demo.is-compact .gesture-demo-badge,
-.gesture-demo.is-compact .cue-line {
-  display: none;
-}
-
-.gesture-demo.is-compact .palm,
-.gesture-demo.is-compact .fold,
-.gesture-demo.is-compact .straight,
-.gesture-demo.is-compact .index-up,
-.gesture-demo.is-compact .thumb {
-  stroke-width: 8;
+.handshape-reference.is-compact img {
+  width: 48px;
+  max-width: none;
+  max-height: 42px;
 }
 
 .reference-copy {
@@ -610,10 +534,6 @@ button:focus-visible {
     min-height: 132px;
   }
 
-  .gesture-demo-stage {
-    min-height: 132px;
-  }
-
   .control-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -624,78 +544,6 @@ button:focus-visible {
     bottom: 248px;
     left: 10px;
     width: auto;
-  }
-}
-
-@keyframes cue-dash {
-  to {
-    stroke-dashoffset: -28;
-  }
-}
-
-@keyframes thumb-side {
-  0%,
-  18% {
-    transform: translate(10px, -16px) rotate(-28deg);
-    opacity: 0.72;
-  }
-
-  42%,
-  100% {
-    transform: translate(0, 0) rotate(0);
-    opacity: 1;
-  }
-}
-
-@keyframes fingers-together {
-  0%,
-  18% {
-    transform: rotate(-4deg) translateX(-3px);
-    opacity: 0.76;
-  }
-
-  42%,
-  100% {
-    transform: rotate(0) translateX(0);
-    opacity: 1;
-  }
-}
-
-@keyframes index-up {
-  0%,
-  18% {
-    transform: rotate(-16deg) translateY(7px);
-    opacity: 0.76;
-  }
-
-  42%,
-  100% {
-    transform: rotate(0) translateY(0);
-    opacity: 1;
-  }
-}
-
-@keyframes thumb-open {
-  0%,
-  18% {
-    transform: translate(18px, 2px) rotate(22deg);
-    opacity: 0.72;
-  }
-
-  42%,
-  100% {
-    transform: translate(0, 0) rotate(0);
-    opacity: 1;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .gesture-demo .cue-line,
-  .gesture-demo-a .thumb-side,
-  .gesture-demo-b .straight,
-  .gesture-demo-l .index-up,
-  .gesture-demo-l .thumb-open {
-    animation: none;
   }
 }
 

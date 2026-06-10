@@ -4,7 +4,7 @@ import { drawHands, resizeOverlay } from "./overlay-renderer.mjs";
 import { evaluateHandshape, HANDSHAPE_INSTRUCTIONS } from "./gesture-rules.mjs";
 import { createFeedbackState } from "./feedback.mjs";
 import { HANDSHAPE_REFERENCES } from "./reference-handshapes.mjs";
-import { renderHandshapeDemo } from "./animated-handshapes.mjs";
+import { renderHandshapeReference } from "./reference-images.mjs";
 
 const els = {
   video: document.querySelector("#cameraVideo"),
@@ -71,8 +71,8 @@ function updateReference(nextTarget) {
   const reference = HANDSHAPE_REFERENCES[nextTarget];
   if (!reference) return;
 
-  els.referenceImage.innerHTML = renderHandshapeDemo(nextTarget);
-  els.collapsedReference.innerHTML = renderHandshapeDemo(nextTarget, { compact: true });
+  els.referenceImage.innerHTML = renderHandshapeReference(nextTarget);
+  els.collapsedReference.innerHTML = renderHandshapeReference(nextTarget, { compact: true });
   els.referenceTitle.textContent = reference.title;
   els.referenceCues.innerHTML = reference.cues.map((cue) => `<li>${cue}</li>`).join("");
 }
