@@ -1,7 +1,11 @@
 export const HANDSHAPE_INSTRUCTIONS = {
   A: "Make a fist. Keep the thumb along the side, not pointing up.",
   B: "Face your palm to the camera. Keep four fingers straight together and fold the thumb across.",
-  L: "Point your index finger up, open the thumb to the side, and fold the other fingers."
+  C: "Curve your fingers and thumb into a clear C shape.",
+  F: "Touch your index finger to your thumb and keep the other three fingers up.",
+  I: "Raise only your pinky finger and fold the other fingers.",
+  L: "Point your index finger up, open the thumb to the side, and fold the other fingers.",
+  Y: "Open your thumb and pinky, then fold the three middle fingers."
 };
 
 const FINGER_TIPS = {
@@ -29,7 +33,11 @@ export function evaluateHandshape(target, landmarks) {
   const evaluator = {
     A: evaluateA,
     B: evaluateB,
-    L: evaluateL
+    C: evaluateC,
+    F: evaluateF,
+    I: evaluateI,
+    L: evaluateL,
+    Y: evaluateY
   }[target];
 
   if (!evaluator) {
@@ -82,10 +90,12 @@ export function getHandFeatures(landmarks) {
   const foldedCount = Object.values(folded).filter(Boolean).length;
   const thumbOpen = isThumbOpen(landmarks);
   const thumbRaised = isThumbRaised(landmarks);
+  const thumbAcrossPalm = isThumbAcrossPalm(landmarks);
   const palmSpan = distance(landmarks[5], landmarks[17]);
   const palmHeight = distance(landmarks[0], landmarks[9]);
   const handSize = Math.max(palmSpan, palmHeight);
   const indexThumbAngle = angleBetween(landmarks[8], landmarks[5], landmarks[4]);
+  const indexThumbDistance = distance(landmarks[8], landmarks[4]);
   const fingerSpread = averageTipSpread(landmarks);
 
   return {
@@ -95,9 +105,11 @@ export function getHandFeatures(landmarks) {
     foldedCount,
     thumbOpen,
     thumbRaised,
+    thumbAcrossPalm,
     handSize,
     fingerSpread,
     indexThumbAngle,
+    indexThumbDistance,
     palmLikelyFacingCamera: palmSpan > 0.12
   };
 }
@@ -124,18 +136,80 @@ function evaluateA(features) {
 
 function evaluateB(features) {
   let score = 0;
-  score += features.extendedCount / 4 * 0.58;
-  score += features.fingerSpread < 0.09 ? 0.16 : 0.06;
-  score += !features.thumbOpen ? 0.13 : 0.04;
+  score += features.extendedCount / 4 * 0.5;
+  score += features.fingerSpread < 0.09 ? 0.15 : 0.05;
+  score += features.thumbAcrossPalm ? 0.22 : 0;
   score += features.palmLikelyFacingCamera ? 0.13 : 0.03;
+  if (!features.thumbAcrossPalm) score = Math.min(score, 0.72);
 
   return {
     score: clamp(score),
     feedback: pickFeedback(score, [
       [features.extendedCount < 4, "Try extending all four fingers"],
       [features.fingerSpread >= 0.11, "Keep the fingers closer together"],
-      [features.thumbOpen, "Thumb position looks off"],
+      [!features.thumbAcrossPalm, "Fold your thumb across the palm"],
       [!features.palmLikelyFacingCamera, "Palm direction may be wrong"]
+    ])
+  };
+}
+
+function evaluateC(features) {
+  const noFullyExtendedFingers = features.extendedCount <= 1;
+  const hasOpenThumb = features.thumbOpen;
+  const roundedGap = features.indexThumbDistance >= 0.08 && features.indexThumbDistance <= 0.24;
+
+  let score = 0;
+  score += noFullyExtendedFingers ? 0.32 : 0.08;
+  score += hasOpenThumb ? 0.28 : 0.06;
+  score += roundedGap ? 0.28 : 0.06;
+  score += features.handSize >= 0.1 && features.handSize <= 0.45 ? 0.12 : 0.03;
+
+  return {
+    score: clamp(score),
+    feedback: pickFeedback(score, [
+      [features.extendedCount > 1, "Curve the fingers instead of holding them straight"],
+      [!hasOpenThumb, "Open the thumb to make a C shape"],
+      [features.indexThumbDistance < 0.08, "Leave more space inside the C"],
+      [features.indexThumbDistance > 0.24, "Bring thumb and fingers closer"]
+    ])
+  };
+}
+
+function evaluateF(features) {
+  const otherFingersExtended = [features.extended.middle, features.extended.ring, features.extended.pinky].filter(Boolean).length;
+  const indexTouchesThumb = features.indexThumbDistance < 0.08;
+
+  let score = 0;
+  score += indexTouchesThumb ? 0.34 : 0.08;
+  score += otherFingersExtended / 3 * 0.42;
+  score += features.thumbOpen ? 0.12 : 0.04;
+  score += features.palmLikelyFacingCamera ? 0.12 : 0.04;
+
+  return {
+    score: clamp(score),
+    feedback: pickFeedback(score, [
+      [!indexTouchesThumb, "Touch your index finger to your thumb"],
+      [otherFingersExtended < 3, "Extend the other three fingers"],
+      [!features.thumbOpen, "Open the thumb and index into a small circle"],
+      [!features.palmLikelyFacingCamera, "Palm direction may be wrong"]
+    ])
+  };
+}
+
+function evaluateI(features) {
+  const otherFingersFolded = [features.folded.index, features.folded.middle, features.folded.ring].filter(Boolean).length;
+
+  let score = 0;
+  score += features.extended.pinky ? 0.42 : 0;
+  score += otherFingersFolded / 3 * 0.42;
+  score += !features.thumbOpen ? 0.16 : 0.05;
+
+  return {
+    score: clamp(score),
+    feedback: pickFeedback(score, [
+      [!features.extended.pinky, "Raise your pinky finger"],
+      [otherFingersFolded < 3, "Fold the other fingers"],
+      [features.thumbOpen, "Keep the thumb across the palm"]
     ])
   };
 }
@@ -157,6 +231,25 @@ function evaluateL(features) {
       [!features.thumbOpen, "Thumb position looks off"],
       [otherFingersFolded < 2, "Try folding the other fingers"],
       [!angleLooksLikeL, "Open the index and thumb into an L shape"]
+    ])
+  };
+}
+
+function evaluateY(features) {
+  const middleFingersFolded = [features.folded.index, features.folded.middle, features.folded.ring].filter(Boolean).length;
+
+  let score = 0;
+  score += features.thumbOpen ? 0.32 : 0;
+  score += features.extended.pinky ? 0.32 : 0;
+  score += middleFingersFolded / 3 * 0.28;
+  score += features.handSize >= 0.1 && features.handSize <= 0.45 ? 0.08 : 0.02;
+
+  return {
+    score: clamp(score),
+    feedback: pickFeedback(score, [
+      [!features.thumbOpen, "Open your thumb out to the side"],
+      [!features.extended.pinky, "Raise your pinky finger"],
+      [middleFingersFolded < 3, "Fold the three middle fingers"]
     ])
   };
 }
@@ -197,6 +290,27 @@ function isThumbRaised(landmarks) {
   const thumbAboveIndex = thumbTip.y < indexMcp.y - 0.035;
   const thumbExtendedFromWrist = distance(thumbTip, wrist) > distance(thumbIp, wrist) * 1.08;
   return thumbAboveIndex && thumbExtendedFromWrist;
+}
+
+function isThumbAcrossPalm(landmarks) {
+  const thumbTip = landmarks[4];
+  const indexMcp = landmarks[5];
+  const middleMcp = landmarks[9];
+  const ringMcp = landmarks[13];
+  const pinkyMcp = landmarks[17];
+  const wrist = landmarks[0];
+  if (!thumbTip || !indexMcp || !middleMcp || !ringMcp || !pinkyMcp || !wrist) return false;
+
+  const palmWidth = distance(indexMcp, pinkyMcp);
+  const palmCenter = {
+    x: (indexMcp.x + middleMcp.x + ringMcp.x + pinkyMcp.x) / 4,
+    y: (indexMcp.y + middleMcp.y + ringMcp.y + pinkyMcp.y) / 4
+  };
+  const thumbNearPalm = distance(thumbTip, palmCenter) < palmWidth * 0.78;
+  const thumbBelowKnuckles = thumbTip.y > indexMcp.y - 0.04 && thumbTip.y < wrist.y - 0.06;
+  const thumbNotRaised = !isThumbRaised(landmarks);
+
+  return thumbNearPalm && thumbBelowKnuckles && thumbNotRaised;
 }
 
 function averageTipSpread(landmarks) {

@@ -51,6 +51,84 @@ test("A rule scores a side thumb higher than a raised thumb", () => {
   assert.equal(evaluateHandshape("A", raisedThumb).feedback, "Keep the thumb on the side, not up");
 });
 
+test("B rule requires thumb folded across the palm", () => {
+  const bShape = makeHand({
+    index: "extended",
+    middle: "extended",
+    ring: "extended",
+    pinky: "extended",
+    thumb: "closed"
+  });
+  const openPalm = makeHand({
+    index: "extended",
+    middle: "extended",
+    ring: "extended",
+    pinky: "extended",
+    thumb: "open"
+  });
+
+  assert.ok(evaluateHandshape("B", bShape).score > evaluateHandshape("B", openPalm).score);
+  assert.ok(evaluateHandshape("B", openPalm).score < 0.78);
+  assert.equal(evaluateHandshape("B", openPalm).feedback, "Fold your thumb across the palm");
+});
+
+test("C rule scores a curved open hand higher than a flat B-like hand", () => {
+  const cShape = makeHand({
+    index: "folded",
+    middle: "folded",
+    ring: "folded",
+    pinky: "folded",
+    thumb: "open"
+  });
+  const flatHand = makeHand({
+    index: "extended",
+    middle: "extended",
+    ring: "extended",
+    pinky: "extended",
+    thumb: "closed"
+  });
+
+  assert.ok(evaluateHandshape("C", cShape).score > evaluateHandshape("C", flatHand).score);
+});
+
+test("F rule scores index-thumb contact with three fingers up", () => {
+  const fShape = makeHand({
+    index: "touchThumb",
+    middle: "extended",
+    ring: "extended",
+    pinky: "extended",
+    thumb: "touchIndex"
+  });
+  const openHand = makeHand({
+    index: "extended",
+    middle: "extended",
+    ring: "extended",
+    pinky: "extended",
+    thumb: "open"
+  });
+
+  assert.ok(evaluateHandshape("F", fShape).score > evaluateHandshape("F", openHand).score);
+});
+
+test("I rule scores pinky-only extension higher than an open hand", () => {
+  const iShape = makeHand({
+    index: "folded",
+    middle: "folded",
+    ring: "folded",
+    pinky: "extended",
+    thumb: "closed"
+  });
+  const openHand = makeHand({
+    index: "extended",
+    middle: "extended",
+    ring: "extended",
+    pinky: "extended",
+    thumb: "open"
+  });
+
+  assert.ok(evaluateHandshape("I", iShape).score > evaluateHandshape("I", openHand).score);
+});
+
 test("L rule scores thumb and index extended higher than a fist mock", () => {
   const lShape = makeHand({
     index: "extended",
@@ -68,6 +146,25 @@ test("L rule scores thumb and index extended higher than a fist mock", () => {
   });
 
   assert.ok(evaluateHandshape("L", lShape).score > evaluateHandshape("L", fist).score);
+});
+
+test("Y rule scores thumb and pinky extension higher than a fist", () => {
+  const yShape = makeHand({
+    index: "folded",
+    middle: "folded",
+    ring: "folded",
+    pinky: "extended",
+    thumb: "open"
+  });
+  const fist = makeHand({
+    index: "folded",
+    middle: "folded",
+    ring: "folded",
+    pinky: "folded",
+    thumb: "closed"
+  });
+
+  assert.ok(evaluateHandshape("Y", yShape).score > evaluateHandshape("Y", fist).score);
 });
 
 test("missing landmarks return a safe result", () => {
@@ -104,6 +201,13 @@ function setFinger(landmarks, _name, state, mcp, pip, dip, tip, x) {
     return;
   }
 
+  if (state === "touchThumb") {
+    landmarks[pip] = { x, y: 0.5, z: 0 };
+    landmarks[dip] = { x: x - 0.02, y: 0.48, z: 0 };
+    landmarks[tip] = { x: 0.32, y: 0.58, z: 0 };
+    return;
+  }
+
   landmarks[pip] = { x, y: 0.54, z: 0 };
   landmarks[dip] = { x: x + 0.01, y: 0.62, z: 0 };
   landmarks[tip] = { x: x + 0.01, y: 0.68, z: 0 };
@@ -115,6 +219,11 @@ function setThumb(landmarks, state) {
   landmarks[3] = { x: 0.34, y: 0.58, z: 0 };
   if (state === "raised") {
     landmarks[4] = { x: 0.38, y: 0.42, z: 0 };
+    return;
+  }
+
+  if (state === "touchIndex") {
+    landmarks[4] = { x: 0.32, y: 0.58, z: 0 };
     return;
   }
 
