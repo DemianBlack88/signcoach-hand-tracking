@@ -25,3 +25,11 @@ test("cropped static reference assets exist for the full ASL alphabet", () => {
     assert.equal(existsSync(assetPath), true, `${fileName} should exist`);
   }
 });
+
+test("secondary reference assets exist for active practice letters", () => {
+  for (const letter of ["A", "B", "C", "F", "I", "L", "Y"]) {
+    const fileName = `asl-${letter.toLowerCase()}.webp`;
+    const assetPath = join(projectRoot, "src", "assets", "references-secondary", fileName);
+    assert.equal(existsSync(assetPath), true, `${fileName} should exist in secondary references`);
+  }
+});
