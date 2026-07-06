@@ -33,6 +33,11 @@ jobs:
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
+        with:
+          # Auto-enable Pages (with GitHub Actions as the source) via the API,
+          # so the deploy no longer depends on the repo's Pages toggle being
+          # set by hand. Requires a public repo or a plan that allows Pages.
+          enablement: true
 
       - name: Install dependencies
         run: npm ci
