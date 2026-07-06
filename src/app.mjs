@@ -238,13 +238,23 @@ function loop(now = performance.now()) {
 function updateDetectedState(hands, now) {
   const primaryHand = hands[0];
   const evaluation = evaluateHandshape(target, primaryHand.landmarks);
-  const stable = feedbackState.update(evaluation, now);
+  const vector = landmarksToFeatureVector(primaryHand.landmarks, { handedness: primaryHand.handedness });
+
+  // Once at least two letters are trained (and the target among them), let the
+  // classifier decide the match score; keep the rule-based text as the hint.
+  // Otherwise fall back entirely to the geometric rules.
+  const useModel = vector !== null && classifier.count(target) > 0 && classifier.labels().length >= 2;
+  const scored = useModel
+    ? { score: classifier.matchScore(vector, target), feedback: evaluation.feedback }
+    : evaluation;
+
+  const stable = feedbackState.update(scored, now);
   const scorePercent = Math.round(stable.smoothedScore * 100);
   const holdPercent = Math.round(stable.holdProgress * 100);
 
   els.statusBadge.textContent = "Hand detected";
   els.statusBadge.dataset.state = "detected";
-  els.detectionStatus.textContent = `${primaryHand.handedness} hand detected`;
+  els.detectionStatus.textContent = `${primaryHand.handedness} hand · ${useModel ? "your model" : "rules"}`;
   els.feedbackMessage.textContent = stable.feedback;
   els.matchScore.textContent = `${scorePercent}%`;
   updateCoachMetrics(scorePercent, holdPercent, getPracticeStatus(stable));
@@ -257,7 +267,7 @@ function updateDetectedState(hands, now) {
     detected: true,
     handedness: primaryHand.handedness,
     confidence: primaryHand.confidence,
-    score: evaluation.score,
+    score: scored.score,
     feedback: stable.feedback
   });
 }

@@ -90,6 +90,37 @@ export function createKnnClassifier({ k = DEFAULT_K } = {}) {
       };
     },
 
+    /**
+     * A scale-free "how much does this look like `label`" score in [0, 1],
+     * used to drive the practice score. It compares the nearest recorded
+     * example of `label` against the nearest example of any other letter:
+     *
+     *   score = dOther / (dTarget + dOther)
+     *
+     * so an exact match to a target example scores ~1, an equally-close other
+     * letter scores 0.5, and a hand that looks more like another letter scores
+     * below 0.5 — no distance threshold to calibrate. Returns 0 when the label
+     * has no samples, and a plain distance-similarity when it is the only label.
+     */
+    matchScore(vector, label) {
+      if (!isValidVector(vector)) return 0;
+
+      let dTarget = Infinity;
+      let dOther = Infinity;
+      for (const sample of samples) {
+        const d = euclidean(vector, sample.vector);
+        if (sample.label === label) {
+          if (d < dTarget) dTarget = d;
+        } else if (d < dOther) {
+          dOther = d;
+        }
+      }
+
+      if (dTarget === Infinity) return 0;
+      if (dOther === Infinity) return 1 / (1 + dTarget);
+      return dOther / (dTarget + dOther);
+    },
+
     /** Serialises all samples to a JSON string for localStorage. */
     toJSON() {
       return JSON.stringify({ version: 1, samples });

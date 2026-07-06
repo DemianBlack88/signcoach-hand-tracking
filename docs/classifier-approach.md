@@ -122,13 +122,37 @@ The "Train model" panel in the practice controls exposes this:
   survives a refresh.
 
 This is the first step that needs a real camera, so it is verified on a phone
-via the GitHub Pages deployment rather than by unit tests alone. The classifier
-result is shown for feedback here but does **not** yet drive the main
-score/hold/feedback flow — that is step 4.
+via the GitHub Pages deployment rather than by unit tests alone.
+
+## Step 4 — classifier drives the score (done)
+
+Classifier method: `matchScore` in [`src/knn-classifier.mjs`](../src/knn-classifier.mjs)
+Wiring: [`src/app.mjs`](../src/app.mjs) (`updateDetectedState`)
+Tests: [`tests/knn-classifier.test.mjs`](../tests/knn-classifier.test.mjs)
+
+The render loop now lets the trained model decide the practice score while the
+geometric rules stay on only as the corrective hint text ("Raise your pinky").
+
+`matchScore(vector, label)` is a scale-free similarity in `[0, 1]`:
+
+```
+score = dOther / (dTarget + dOther)
+```
+
+where `dTarget` is the distance to the nearest recorded example of the target
+letter and `dOther` the distance to the nearest example of any other letter. An
+exact match scores ~1, an equally-close other letter 0.5, and a hand that looks
+more like another letter below 0.5 — with no distance threshold to calibrate.
+With a single trained label it falls back to `1 / (1 + dTarget)`.
+
+`updateDetectedState` uses the model score when the target letter has samples
+**and** at least two letters are trained (so `dOther` is meaningful); otherwise
+it falls back entirely to the rule-based score, preserving the original
+behaviour for untrained letters. The score flows through the existing
+`feedbackState` smoothing/hold logic unchanged, and the detection line shows
+which engine is active (`Right hand · your model` vs `· rules`).
 
 ## Next steps
 
-- **Step 4** — wire the classifier into the render loop; classifier gives the
-  verdict, `gesture-rules.mjs` supplies the corrective hint.
 - **Step 5** — record a default dataset for all 26 letters and ship it as the
   built-in baseline.

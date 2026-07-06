@@ -102,6 +102,44 @@ test("loadJSON rejects corrupt data without throwing", () => {
   assert.equal(knn.count(), 12, "samples should be untouched after a failed load");
 });
 
+test("matchScore returns 0 without samples or with a bad vector", () => {
+  const knn = createKnnClassifier();
+  assert.equal(knn.matchScore(vectorNear(0), "A"), 0);
+  knn.addSample("A", vectorNear(0));
+  assert.equal(knn.matchScore([1, 2, 3], "A"), 0); // malformed vector
+  assert.equal(knn.matchScore(vectorNear(0), "Z"), 0); // label has no samples
+});
+
+test("matchScore scores an exact target match near 1", () => {
+  const knn = trainedClassifier();
+  const score = knn.matchScore(vectorNear(0), "A");
+  assert.ok(score > 0.95, `expected near 1, got ${score}`);
+});
+
+test("matchScore scores a wrong-letter pose below 0.5", () => {
+  const knn = trainedClassifier();
+  // A hand sitting right on a B cluster should score low for target A.
+  const score = knn.matchScore(vectorNear(1), "A");
+  assert.ok(score < 0.5, `expected below 0.5, got ${score}`);
+});
+
+test("matchScore is ~0.5 when target and another letter are equally close", () => {
+  const knn = createKnnClassifier();
+  knn.addSample("A", vectorNear(0));
+  knn.addSample("B", vectorNear(2));
+  const score = knn.matchScore(vectorNear(1), "A"); // midway between A and B
+  assert.ok(score > 0.45 && score < 0.55, `expected ~0.5, got ${score}`);
+});
+
+test("matchScore falls back to distance similarity for a single label", () => {
+  const knn = createKnnClassifier();
+  knn.addSample("A", vectorNear(0));
+  const close = knn.matchScore(vectorNear(0, 0.01), "A");
+  const far = knn.matchScore(vectorNear(0.5), "A");
+  assert.ok(close > far, "closer hand should score higher");
+  assert.ok(close <= 1 && far >= 0);
+});
+
 test("saves to and loads from storage", () => {
   const storage = fakeStorage();
   const knn = trainedClassifier();
