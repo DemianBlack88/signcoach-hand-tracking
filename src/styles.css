@@ -196,6 +196,13 @@ button:focus-visible {
 .lesson-panel-body {
   display: grid;
   gap: 12px;
+  /* Never let the panel cover the whole screen: cap its height and scroll
+     inside, so the camera stays visible above it and every control stays
+     reachable. */
+  max-height: min(560px, 66dvh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .collapsed-summary {
@@ -595,6 +602,8 @@ button:focus-visible {
 
   .lesson-panel-body {
     gap: 10px;
+    /* Leave the top ~45% of the screen showing the camera on phones. */
+    max-height: 52dvh;
   }
 
   .reference-card {
