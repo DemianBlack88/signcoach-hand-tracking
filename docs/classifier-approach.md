@@ -29,7 +29,7 @@ raw MediaPipe landmarks
 landmark-normalization.mjs   ← pose-invariant 63-number feature vector
         │
         ▼
-(next step) knn-classifier   ← nearest-neighbour vote over recorded samples
+knn-classifier.mjs           ← nearest-neighbour vote over recorded samples
         │
         ▼
 verdict + gesture-rules hint → UI
@@ -69,11 +69,36 @@ The tests assert the invariances hold to within `1e-6`: a synthetic hand is
 translated, scaled, rotated, and mirrored, and the feature vector is unchanged
 (or cleanly mirrored) each time.
 
+## Step 2 — KNN classifier (done)
+
+Module: [`src/knn-classifier.mjs`](../src/knn-classifier.mjs)
+Tests: [`tests/knn-classifier.test.mjs`](../tests/knn-classifier.test.mjs)
+
+`createKnnClassifier({ k })` stores labelled 63-number feature vectors and
+classifies a new vector by a **distance-weighted vote** of its `k` nearest
+neighbours (inverse-distance weighting, so closer samples count for more and an
+exact match cannot divide by zero). `k` is capped at the number of stored
+samples so the model works from the very first recording.
+
+`classify()` returns `{ label, confidence, distance, neighbors }`, where
+`confidence` is the share of the weighted vote won by the top label (in `[0, 1]`)
+— the render loop can threshold on this to avoid guessing on an unclear pose.
+
+Why KNN: no training step, a user's own reference sample takes effect
+immediately, and the entire model is just an array of vectors that serialises
+cleanly. Persistence helpers:
+
+- `toJSON()` / `loadJSON(json)` — pure (de)serialisation, corrupt input is
+  rejected without throwing and without touching existing samples.
+- `save(storage)` / `load(storage)` — localStorage wrappers (default to
+  `globalThis.localStorage`, injectable for tests), storing under
+  `signcoach.knn.samples.v1`.
+
+Management helpers `count(label?)`, `labels()`, `removeLabel(label)`, and
+`clear()` back the recording UI in the next step.
+
 ## Next steps
 
-- **Step 2** — `knn-classifier.mjs`: store labelled feature vectors, classify a
-  new vector by nearest-neighbour vote, (de)serialise samples to/from
-  `localStorage`.
 - **Step 3** — recording UI: "record reference for letter X", capture N frames.
 - **Step 4** — wire the classifier into the render loop; classifier gives the
   verdict, `gesture-rules.mjs` supplies the corrective hint.
