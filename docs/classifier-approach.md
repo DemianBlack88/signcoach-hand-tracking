@@ -97,9 +97,37 @@ cleanly. Persistence helpers:
 Management helpers `count(label?)`, `labels()`, `removeLabel(label)`, and
 `clear()` back the recording UI in the next step.
 
+## Step 3 — recording UI (done)
+
+Module: [`src/sample-recorder.mjs`](../src/sample-recorder.mjs)
+Tests: [`tests/sample-recorder.test.mjs`](../tests/sample-recorder.test.mjs)
+Wiring: [`src/app.mjs`](../src/app.mjs), [`index.html`](../index.html), [`src/styles.css`](../src/styles.css)
+
+`createSampleRecorder(classifier, { framesPerSample })` runs a "record N frames
+for a letter" session. The render loop feeds it one frame of landmarks at a
+time; each usable frame becomes one labelled sample (frames with no hand are
+ignored, so the count reflects real captured examples). When the last needed
+frame lands the session ends and returns `done: true`. It holds no DOM or camera
+state, so it is unit-tested in isolation.
+
+The "Train model" panel in the practice controls exposes this:
+
+- **Record X** — starts a capture session for the selected letter; the button
+  turns red and the status shows `Recording X… 12/30`. Clicking again cancels.
+- **Clear X** — drops that letter's samples (disabled when there are none).
+- **Recognized: X (87%)** — while not recording, the loop classifies the live
+  hand and shows the top label + confidence, so you can immediately see the
+  model working on your own hand.
+- Samples persist to `localStorage` after each recording, so a trained model
+  survives a refresh.
+
+This is the first step that needs a real camera, so it is verified on a phone
+via the GitHub Pages deployment rather than by unit tests alone. The classifier
+result is shown for feedback here but does **not** yet drive the main
+score/hold/feedback flow — that is step 4.
+
 ## Next steps
 
-- **Step 3** — recording UI: "record reference for letter X", capture N frames.
 - **Step 4** — wire the classifier into the render loop; classifier gives the
   verdict, `gesture-rules.mjs` supplies the corrective hint.
 - **Step 5** — record a default dataset for all 26 letters and ship it as the

@@ -480,6 +480,59 @@ button:focus-visible {
   gap: 8px;
 }
 
+.training-box {
+  display: grid;
+  gap: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius);
+  padding: 11px 12px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.training-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.training-samples {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.training-status {
+  display: grid;
+  gap: 3px;
+}
+
+.training-status strong {
+  font-size: 0.92rem;
+  line-height: 1.3;
+}
+
+.training-status small {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.training-controls {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.training-box.is-recording {
+  border-color: rgba(89, 214, 167, 0.7);
+  background: rgba(89, 214, 167, 0.12);
+}
+
+#recordButton.is-recording {
+  border-color: rgba(255, 138, 138, 0.86);
+  background: linear-gradient(180deg, #ff9d9d, #f56b6b);
+  color: #180605;
+}
+
 .debug-panel {
   position: absolute;
   top: 92px;

@@ -5,6 +5,9 @@ import { evaluateHandshape, HANDSHAPE_INSTRUCTIONS } from "./gesture-rules.mjs";
 import { createFeedbackState } from "./feedback.mjs";
 import { HANDSHAPE_REFERENCES } from "./reference-handshapes.mjs";
 import { renderHandshapeReference } from "./reference-images.mjs";
+import { createKnnClassifier } from "./knn-classifier.mjs";
+import { createSampleRecorder } from "./sample-recorder.mjs";
+import { landmarksToFeatureVector } from "./landmark-normalization.mjs";
 
 const els = {
   video: document.querySelector("#cameraVideo"),
@@ -41,6 +44,12 @@ const els = {
   debugScore: document.querySelector("#debugScore"),
   debugFeedback: document.querySelector("#debugFeedback"),
   debugFps: document.querySelector("#debugFps"),
+  trainingBox: document.querySelector(".training-box"),
+  trainingSamples: document.querySelector("#trainingSamples"),
+  trainingStatus: document.querySelector("#trainingStatus"),
+  trainingPrediction: document.querySelector("#trainingPrediction"),
+  recordButton: document.querySelector("#recordButton"),
+  clearLetterButton: document.querySelector("#clearLetterButton"),
   letterButtons: [...document.querySelectorAll(".letter-button")]
 };
 
@@ -54,8 +63,12 @@ let lastFrameAt = performance.now();
 let fps = 0;
 
 const feedbackState = createFeedbackState();
+const classifier = createKnnClassifier();
+classifier.load();
+const recorder = createSampleRecorder(classifier);
 
 function setTarget(nextTarget) {
+  if (recorder.recording) recorder.cancel();
   target = nextTarget;
   els.targetLetter.textContent = target;
   els.collapsedTarget.textContent = target;
@@ -65,6 +78,47 @@ function setTarget(nextTarget) {
     button.classList.toggle("is-active", button.dataset.target === target);
   });
   feedbackState.reset();
+  updateTrainingControls();
+}
+
+function updateTrainingControls() {
+  const count = classifier.count(target);
+  els.recordButton.textContent = `Record ${target}`;
+  els.clearLetterButton.textContent = `Clear ${target}`;
+  els.clearLetterButton.disabled = count === 0;
+  els.trainingSamples.textContent = `${count} example${count === 1 ? "" : "s"} for ${target}`;
+  setRecordingUi(false);
+}
+
+function setRecordingUi(isRecording) {
+  els.recordButton.classList.toggle("is-recording", isRecording);
+  els.trainingBox.classList.toggle("is-recording", isRecording);
+  els.recordButton.textContent = isRecording ? "Recording…" : `Record ${target}`;
+}
+
+function handleRecordClick() {
+  if (!running) {
+    els.trainingStatus.textContent = "Start the camera before recording.";
+    return;
+  }
+  if (recorder.recording) {
+    recorder.cancel();
+    setRecordingUi(false);
+    els.trainingStatus.textContent = `Recording cancelled for ${target}.`;
+    return;
+  }
+  recorder.start(target);
+  setRecordingUi(true);
+  els.trainingStatus.textContent = `Hold the ${target} shape…`;
+}
+
+function handleClearLetter() {
+  if (recorder.recording) recorder.cancel();
+  classifier.removeLabel(target);
+  classifier.save();
+  updateTrainingControls();
+  els.trainingStatus.textContent = `Cleared saved examples for ${target}.`;
+  els.trainingPrediction.textContent = "Recognized: —";
 }
 
 function updateReference(nextTarget) {
@@ -197,6 +251,8 @@ function updateDetectedState(hands, now) {
   updateCollapsedSummary(stable.feedback, scorePercent, holdPercent);
   els.cameraMessage.hidden = true;
 
+  updateTraining(primaryHand);
+
   updateDebug({
     detected: true,
     handedness: primaryHand.handedness,
@@ -204,6 +260,26 @@ function updateDetectedState(hands, now) {
     score: evaluation.score,
     feedback: stable.feedback
   });
+}
+
+function updateTraining(primaryHand) {
+  if (recorder.recording) {
+    const progress = recorder.capture(primaryHand.landmarks, { handedness: primaryHand.handedness });
+    if (progress.done) {
+      classifier.save();
+      updateTrainingControls();
+      els.trainingStatus.textContent = `Saved ${progress.captured} examples of ${progress.label}.`;
+    } else {
+      els.trainingStatus.textContent = `Recording ${target}… ${progress.captured}/${progress.target}`;
+    }
+    return;
+  }
+
+  const vector = landmarksToFeatureVector(primaryHand.landmarks, { handedness: primaryHand.handedness });
+  const prediction = vector ? classifier.classify(vector) : null;
+  els.trainingPrediction.textContent = prediction
+    ? `Recognized: ${prediction.label} (${Math.round(prediction.confidence * 100)}%)`
+    : "Recognized: — (record examples first)";
 }
 
 function updateNoHandState(feedback) {
@@ -276,6 +352,8 @@ window.addEventListener("beforeunload", () => {
 els.startButton.addEventListener("click", handleStartCamera);
 els.switchButton.addEventListener("click", handleSwitchCamera);
 els.resetButton.addEventListener("click", handleReset);
+els.recordButton.addEventListener("click", handleRecordClick);
+els.clearLetterButton.addEventListener("click", handleClearLetter);
 els.panelToggle.addEventListener("click", () => {
   const collapsed = els.lessonPanel.classList.toggle("is-collapsed");
   els.panelToggle.setAttribute("aria-expanded", String(!collapsed));

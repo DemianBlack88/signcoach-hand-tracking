@@ -116,6 +116,21 @@
             </div>
           </div>
 
+          <div class="training-box">
+            <div class="training-head">
+              <span class="eyebrow">Train model</span>
+              <span id="trainingSamples" class="training-samples">0 examples for A</span>
+            </div>
+            <div class="training-status" aria-live="polite">
+              <strong id="trainingStatus">Record a few examples of each letter, then it recognizes yours.</strong>
+              <small id="trainingPrediction">Recognized: —</small>
+            </div>
+            <div class="control-row training-controls">
+              <button id="recordButton" type="button">Record A</button>
+              <button id="clearLetterButton" type="button">Clear A</button>
+            </div>
+          </div>
+
           <div class="control-row">
             <button id="startButton" class="primary-button" type="button">Start Camera</button>
             <button id="switchButton" type="button">Switch Camera</button>
