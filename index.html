@@ -87,15 +87,7 @@
             Make a relaxed fist with the thumb visible along the side.
           </p>
 
-          <div class="letter-selector" role="group" aria-label="Choose handshape">
-            <button class="letter-button is-active" type="button" data-target="A">A</button>
-            <button class="letter-button" type="button" data-target="B">B</button>
-            <button class="letter-button" type="button" data-target="C">C</button>
-            <button class="letter-button" type="button" data-target="F">F</button>
-            <button class="letter-button" type="button" data-target="I">I</button>
-            <button class="letter-button" type="button" data-target="L">L</button>
-            <button class="letter-button" type="button" data-target="Y">Y</button>
-          </div>
+          <div id="letterSelector" class="letter-selector" role="group" aria-label="Choose handshape"></div>
 
           <div class="feedback-box">
             <span id="detectionStatus">Waiting for camera</span>
@@ -128,6 +120,7 @@
             <div class="control-row training-controls">
               <button id="recordButton" type="button">Record A</button>
               <button id="clearLetterButton" type="button">Clear A</button>
+              <button id="exportButton" type="button">Export</button>
             </div>
           </div>
 

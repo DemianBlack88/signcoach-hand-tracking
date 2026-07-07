@@ -415,13 +415,15 @@ button:focus-visible {
 
 .letter-selector {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  /* All 26 letters: pack small square buttons, as many per row as fit. */
+  grid-template-columns: repeat(auto-fill, minmax(46px, 1fr));
+  gap: 6px;
 }
 
 .letter-button {
-  min-height: 52px;
-  font-size: 1.1rem;
+  min-height: 44px;
+  padding: 0;
+  font-size: 1rem;
 }
 
 .letter-button.is-active,
@@ -526,7 +528,7 @@ button:focus-visible {
 }
 
 .training-controls {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .training-box.is-recording {

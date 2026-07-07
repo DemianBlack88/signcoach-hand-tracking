@@ -4,7 +4,7 @@ import { drawHands, resizeOverlay } from "./overlay-renderer.mjs";
 import { evaluateHandshape, HANDSHAPE_INSTRUCTIONS } from "./gesture-rules.mjs";
 import { createFeedbackState } from "./feedback.mjs";
 import { HANDSHAPE_REFERENCES } from "./reference-handshapes.mjs";
-import { renderHandshapeReference } from "./reference-images.mjs";
+import { ASL_ALPHABET, renderHandshapeReference } from "./reference-images.mjs";
 import { createKnnClassifier } from "./knn-classifier.mjs";
 import { createSampleRecorder } from "./sample-recorder.mjs";
 import { landmarksToFeatureVector } from "./landmark-normalization.mjs";
@@ -50,7 +50,9 @@ const els = {
   trainingPrediction: document.querySelector("#trainingPrediction"),
   recordButton: document.querySelector("#recordButton"),
   clearLetterButton: document.querySelector("#clearLetterButton"),
-  letterButtons: [...document.querySelectorAll(".letter-button")]
+  exportButton: document.querySelector("#exportButton"),
+  letterSelector: document.querySelector("#letterSelector"),
+  letterButtons: []
 };
 
 let target = "A";
@@ -62,17 +64,29 @@ let animationId = null;
 let lastFrameAt = performance.now();
 let fps = 0;
 
+// A dataset recorded by the author can be bundled at assets/default-samples.json
+// so the classifier works out of the box. import.meta.glob tolerates the file
+// not existing yet. The user's own localStorage recordings always win.
+const DEFAULT_DATASET = import.meta.glob("./assets/default-samples.json", { eager: true });
+
 const feedbackState = createFeedbackState();
 const classifier = createKnnClassifier();
-classifier.load();
+loadInitialSamples();
 const recorder = createSampleRecorder(classifier);
+
+function loadInitialSamples() {
+  if (classifier.load()) return;
+  const bundled = DEFAULT_DATASET["./assets/default-samples.json"];
+  if (bundled?.default) classifier.loadJSON(JSON.stringify(bundled.default));
+}
 
 function setTarget(nextTarget) {
   if (recorder.recording) recorder.cancel();
   target = nextTarget;
   els.targetLetter.textContent = target;
   els.collapsedTarget.textContent = target;
-  els.instructionText.textContent = HANDSHAPE_INSTRUCTIONS[target];
+  els.instructionText.textContent =
+    HANDSHAPE_INSTRUCTIONS[target] || `${HANDSHAPE_REFERENCES[target].cues.join(". ")}.`;
   updateReference(target);
   els.letterButtons.forEach((button) => {
     button.classList.toggle("is-active", button.dataset.target === target);
@@ -86,6 +100,7 @@ function updateTrainingControls() {
   els.recordButton.textContent = `Record ${target}`;
   els.clearLetterButton.textContent = `Clear ${target}`;
   els.clearLetterButton.disabled = count === 0;
+  els.exportButton.disabled = classifier.count() === 0;
   els.trainingSamples.textContent = `${count} example${count === 1 ? "" : "s"} for ${target}`;
   setRecordingUi(false);
 }
@@ -110,6 +125,27 @@ function handleRecordClick() {
   recorder.start(target);
   setRecordingUi(true);
   els.trainingStatus.textContent = `Hold the ${target} shape…`;
+}
+
+function renderLetterButtons() {
+  els.letterSelector.innerHTML = ASL_ALPHABET.map(
+    (letter) => `<button class="letter-button" type="button" data-target="${letter}">${letter}</button>`
+  ).join("");
+  els.letterButtons = [...els.letterSelector.querySelectorAll(".letter-button")];
+  els.letterButtons.forEach((button) => {
+    button.addEventListener("click", () => setTarget(button.dataset.target));
+  });
+}
+
+function handleExportSamples() {
+  const blob = new Blob([classifier.toJSON()], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "signcoach-samples.json";
+  link.click();
+  URL.revokeObjectURL(url);
+  els.trainingStatus.textContent = `Exported ${classifier.count()} samples (${classifier.labels().length} letters).`;
 }
 
 function handleClearLetter() {
@@ -242,11 +278,22 @@ function updateDetectedState(hands, now) {
 
   // Once at least two letters are trained (and the target among them), let the
   // classifier decide the match score; keep the rule-based text as the hint.
-  // Otherwise fall back entirely to the geometric rules.
+  // Otherwise fall back to the geometric rules. Letters without rules use the
+  // reference cue as the hint, and prompt for recording when untrained.
   const useModel = vector !== null && classifier.count(target) > 0 && classifier.labels().length >= 2;
-  const scored = useModel
-    ? { score: classifier.matchScore(vector, target), feedback: evaluation.feedback }
-    : evaluation;
+  const hasRules = Boolean(HANDSHAPE_INSTRUCTIONS[target]);
+  const hint = hasRules
+    ? evaluation.feedback
+    : HANDSHAPE_REFERENCES[target]?.cues?.[0] || "Match the reference image";
+
+  let scored;
+  if (useModel) {
+    scored = { score: classifier.matchScore(vector, target), feedback: hint };
+  } else if (hasRules) {
+    scored = evaluation;
+  } else {
+    scored = { score: 0, feedback: `Record examples of ${target} to enable scoring` };
+  }
 
   const stable = feedbackState.update(scored, now);
   const scorePercent = Math.round(stable.smoothedScore * 100);
@@ -364,6 +411,7 @@ els.switchButton.addEventListener("click", handleSwitchCamera);
 els.resetButton.addEventListener("click", handleReset);
 els.recordButton.addEventListener("click", handleRecordClick);
 els.clearLetterButton.addEventListener("click", handleClearLetter);
+els.exportButton.addEventListener("click", handleExportSamples);
 els.panelToggle.addEventListener("click", () => {
   const collapsed = els.lessonPanel.classList.toggle("is-collapsed");
   els.panelToggle.setAttribute("aria-expanded", String(!collapsed));
@@ -375,9 +423,7 @@ els.debugButton.addEventListener("click", () => {
   els.debugPanel.hidden = !isHidden;
   els.debugButton.setAttribute("aria-expanded", String(isHidden));
 });
-els.letterButtons.forEach((button) => {
-  button.addEventListener("click", () => setTarget(button.dataset.target));
-});
+renderLetterButtons();
 
 els.switchButton.disabled = true;
 setTarget(target);

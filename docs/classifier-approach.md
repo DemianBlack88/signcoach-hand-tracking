@@ -152,7 +152,28 @@ behaviour for untrained letters. The score flows through the existing
 `feedbackState` smoothing/hold logic unchanged, and the detection line shows
 which engine is active (`Right hand · your model` vs `· rules`).
 
-## Next steps
+## Step 5 — all 26 letters + dataset export (in progress)
 
-- **Step 5** — record a default dataset for all 26 letters and ship it as the
-  built-in baseline.
+Wiring: [`src/app.mjs`](../src/app.mjs), [`index.html`](../index.html), [`src/styles.css`](../src/styles.css)
+
+The letter selector is now generated from `ASL_ALPHABET`, so all 26 letters are
+selectable and recordable (previously only the 7 rule-backed letters). Letters
+without geometric rules:
+
+- take their instruction text from the reference cues,
+- use the first cue as the coaching hint while the model scores,
+- and show "Record examples of X to enable scoring" instead of a bogus
+  rule-based 0 score when untrained.
+
+The **Export** button in the Train model panel downloads all recorded samples
+as `signcoach-samples.json` (disabled while there are none). On startup, if
+localStorage has no samples, the app loads a bundled dataset from
+`src/assets/default-samples.json` when that file exists — the user's own
+recordings always win.
+
+Remaining for step 5: record a full 26-letter dataset (the author is doing this
+on-device), export it, and commit it as `src/assets/default-samples.json` so
+the classifier works out of the box.
+
+Note: J and Z involve motion in real ASL; the static classifier scores their
+end pose only.
